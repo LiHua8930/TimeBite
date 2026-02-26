@@ -1,47 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.sky</groupId>
         <artifactId>Time-Bite</artifactId>
+        <groupId>com.sky</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+    <modelVersion>4.0.0</modelVersion>
     <artifactId>ui-test</artifactId>
-    <packaging>war</packaging>
-    <name>ui-test Maven Webapp</name>
-    <url>http://maven.apache.org</url>
+    <packaging>jar</packaging>
 
     <dependencies>
-        <!-- JUnit（升级到4.13.2，兼容更多场景，3.8.1过于老旧） -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Selenium Java 核心依赖（修正了正确的groupId） -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.15.0</version> </dependency>
-        <!-- TestNG 测试框架 -->
+            <version>4.18.1</version>
+        </dependency>
+        <!-- 显式引入Allure TestNG依赖（关键！） -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- 引入TestNG核心依赖 -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>7.7.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>5.6.0</version>
+            <version>7.8.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <build>
-        <finalName>ui-test</finalName>
-    </build>
+    <!-- 继承父插件配置，无需重复定义 -->
 </project>

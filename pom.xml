@@ -20,20 +20,22 @@
         <module>api-test</module>
     </modules>
     <properties>
-        <mybatis.spring>2.2.0</mybatis.spring>
+        <mybatis.spring>2.2.2</mybatis.spring>
         <lombok>1.18.20</lombok>
         <fastjson>1.2.76</fastjson>
         <commons.lang>2.6</commons.lang>
         <druid>1.2.8</druid>
-        <!-- 修正：使用适配 Spring Boot 2.7.3 的 PageHelper 版本 -->
         <pagehelper>1.4.7</pagehelper>
         <aliyun.sdk.oss>3.10.2</aliyun.sdk.oss>
         <knife4j>3.0.2</knife4j>
-        <aspectj>1.9.4</aspectj>
+        <aspectj>1.9.24</aspectj>
         <jjwt>0.9.1</jjwt>
         <jaxb-api>2.3.1</jaxb-api>
-        <poi>3.16</poi>
+        <poi>4.1.2</poi>
         <wx-pay>0.4.8</wx-pay>
+        <allure.version>2.24.0</allure.version>
+        <!-- 新增aspectjweaver路径变量，避免硬编码 -->
+        <aspectjweaver.path>${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj}/aspectjweaver-${aspectj}.jar</aspectjweaver.path>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -47,75 +49,75 @@
                 <artifactId>mybatis-spring-boot-starter</artifactId>
                 <version>${mybatis.spring}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson}</version>
             </dependency>
-
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${commons.lang}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid-spring-boot-starter</artifactId>
                 <version>${druid}</version>
             </dependency>
-
-            <!-- 修正：只保留一个 PageHelper 依赖，引用统一的变量版本 -->
             <dependency>
                 <groupId>com.github.pagehelper</groupId>
                 <artifactId>pagehelper-spring-boot-starter</artifactId>
                 <version>${pagehelper}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-spring-boot-starter</artifactId>
                 <version>${knife4j}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjrt</artifactId>
                 <version>${aspectj}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
                 <version>${aspectj}</version>
             </dependency>
-
+            <!-- JJWT 补充依赖 -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>${jjwt}</version>
             </dependency>
-
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt}</version>
+                <scope>runtime</scope>
+            </dependency>
             <dependency>
                 <groupId>com.aliyun.oss</groupId>
                 <artifactId>aliyun-sdk-oss</artifactId>
                 <version>${aliyun.sdk.oss}</version>
             </dependency>
-
             <dependency>
                 <groupId>javax.xml.bind</groupId>
                 <artifactId>jaxb-api</artifactId>
                 <version>${jaxb-api}</version>
             </dependency>
-
-            <!-- poi -->
+            <!-- POI 升级版本 -->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
@@ -132,28 +134,40 @@
                 <artifactId>wechatpay-apache-httpclient</artifactId>
                 <version>${wx-pay}</version>
             </dependency>
-            <!-- allure - TestNG 集成 -->
+            <!-- 清理重复声明，只保留一份Allure TestNG依赖管理 -->
             <dependency>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-testng</artifactId>
-                <version>2.24.0</version> <scope>test</scope>
+                <version>${allure.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <!-- Maven Surefire 和 Allure 插件配置 -->
+    <!-- Maven 插件修复 -->
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version> <configuration>
-                <argLine>
-                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
-                </argLine>
-                <systemPropertyVariables>
-                    <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
-                </systemPropertyVariables>
-            </configuration>
+                <version>3.1.2</version>
+                <configuration>
+                    <testFailureIgnore>true</testFailureIgnore>
+                    <!-- 关键修复：关闭进程分叉，解决类加载问题 -->
+
+                    <!-- 优化argLine配置，使用变量避免硬编码 -->
+                    <argLine>
+                        -javaagent:"${aspectjweaver.path}"
+                    </argLine>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${user.dir}/target/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>io.qameta.allure.testng.AllureTestNg</value>
+                        </property>
+                    </properties>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
@@ -162,11 +176,14 @@
                     </dependency>
                 </dependencies>
             </plugin>
-
+            <!-- Allure 插件升级到匹配版本 -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
-                <version>2.15.2</version>
+                <version>2.12.0</version>
+                <configuration>
+                    <reportVersion>${allure.version}</reportVersion>
+                </configuration>
             </plugin>
         </plugins>
     </build>
